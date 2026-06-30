@@ -256,55 +256,39 @@ filterBtns.forEach(btn => {
     msgEl.className   = `form-message ${type}`;
   }
 
-  form.addEventListener('submit', async e => {
+  form.addEventListener('submit', e => {
     e.preventDefault();
     const error = validate();
     if (error) { showMsg(error, 'error'); return; }
 
     // Build payload
-    const payload = {
-      nome:     form.nome.value.trim(),
-      email:    form.email.value.trim(),
-      telefone: form.telefone.value.trim(),
-      tipo:     form.tipo.value || '—',
-      data:     form.data.value || '—',
-      mensagem: form.mensagem.value.trim() || '—',
-      enviadoEm: new Date().toLocaleString('pt-BR'),
-    };
+    const nome     = form.nome.value.trim();
+    const email    = form.email.value.trim();
+    const telefone = form.telefone.value.trim();
+    const tipo     = form.tipo.value || '—';
+    const data     = form.data.value || '—';
+    const mensagem = form.mensagem.value.trim() || '—';
 
-    // Save to table
+    // Build WhatsApp message
+    let waMsg = `Olá, Thais Lima! 👋\n\nMeu nome é *${nome}* e tenho interesse nos seus serviços.\n\n`;
+    waMsg += `📧 E-mail: ${email}\n`;
+    waMsg += `📱 WhatsApp: ${telefone}\n`;
+    if (tipo !== '—') waMsg += `🎉 Tipo de evento: ${tipo}\n`;
+    if (data !== '—') waMsg += `📅 Data prevista: ${data}\n`;
+    if (mensagem !== '—') waMsg += `\n💬 Mensagem: ${mensagem}\n`;
+    waMsg += `\nAcabei de preencher o formulário do site. Aguardo seu retorno! 😊`;
+
     submitBtn.disabled = true;
-    submitBtn.querySelector('span').textContent = 'Enviando...';
+    submitBtn.querySelector('span').textContent = 'Redirecionando...';
 
-    try {
-      const res = await fetch('tables/contatos', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload),
-      });
+    showMsg('✨ Redirecionando para o WhatsApp...', 'success');
 
-      if (res.ok) {
-        showMsg('✨ Mensagem enviada com sucesso! Entraremos em contato em breve.', 'success');
-        form.reset();
-
-        // Open WhatsApp
-        const waText = encodeURIComponent(
-          `Olá, Thais Lima! Me chamo *${payload.nome}* e tenho interesse em seus serviços de ${payload.tipo !== '—' ? payload.tipo : 'eventos'}. Acabei de preencher o formulário do site.`
-        );
-        setTimeout(() => {
-          window.open(`https://wa.me/5562982051296?text=${waText}`, '_blank');
-        }, 1500);
-      } else {
-        throw new Error('Falha no envio');
-      }
-    } catch {
-      // Fallback: just show success (static mode)
-      showMsg('✨ Mensagem registrada! Entraremos em contato em breve.', 'success');
+    setTimeout(() => {
+      window.open(`https://wa.me/5562982051296?text=${encodeURIComponent(waMsg)}`, '_blank');
       form.reset();
-    } finally {
       submitBtn.disabled = false;
       submitBtn.querySelector('span').textContent = 'Enviar mensagem';
-    }
+    }, 1000);
   });
 })();
 
